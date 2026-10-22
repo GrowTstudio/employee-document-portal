@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#142b4a"><title>Employee Document Portal</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar"><div class="brand-mark">EP</div><div class="brand-copy"><strong>Employee Portal</strong><span>Details & document submission</span></div><button id="adminOpen" class="button button-outline button-small">Admin Login</button></header>
+  <main class="page-wrap">
+    <section id="employeeView" class="employee-layout">
+      <div class="intro-panel"><div class="eyebrow">EMPLOYEE ONBOARDING</div><h1>Your details.<br><span>One secure place.</span></h1><p>Complete the form and upload the requested documents. Please check your details before submitting.</p><div class="trust-note"><span class="shield">✓</span><div><strong>Submission checklist</strong><small>Use clear, readable files. PDF, JPG, PNG, DOC and DOCX are accepted; maximum 10 MB per file.</small></div></div></div>
+      <section class="form-card"><div class="section-heading"><div><div class="eyebrow">EMPLOYEE FORM</div><h2>Submit your information</h2></div><span class="required-note">* Required</span></div>
+        <div id="loadError" class="alert error hidden"></div>
+        <form id="employeeForm"><div id="detailsFields" class="form-grid"></div><div class="divider"></div><div class="section-heading docs-heading"><div><div class="eyebrow">DOCUMENTS</div><h2>Upload documents</h2></div></div><p class="muted">Upload only the documents requested by your company.</p><div id="documentFields" class="document-list"></div><button id="submitButton" class="button button-primary button-full" type="submit">Submit details & documents <span>→</span></button><p class="privacy-note">Your information is submitted to the company administrator. Do not use a shared or public device for sensitive documents.</p><div id="submitMessage" class="alert hidden" role="status"></div></form>
+      </section>
+    </section>
+
+    <section id="adminLoginView" class="login-wrap hidden"><div class="login-card"><div class="login-icon">⌘</div><div class="eyebrow">RESTRICTED ACCESS</div><h1>Admin sign in</h1><p class="muted">Only authorized administrators can view employee records and documents.</p><form id="loginForm"><label for="adminPassword">Admin password</label><input id="adminPassword" type="password" autocomplete="current-password" required placeholder="Enter your password"><button class="button button-primary button-full" type="submit">Sign in securely</button><div id="loginMessage" class="alert hidden"></div></form><button id="backToForm" class="text-button">← Back to employee form</button></div></section>
+
+    <section id="adminView" class="admin-view hidden"><div class="admin-header"><div><div class="eyebrow">ADMINISTRATION</div><h1>Employee records</h1><p class="muted">Review submissions, download documents, and manage the form requirements.</p></div><div class="header-actions"><button id="exportButton" class="button button-primary">↓ Export Excel</button><button id="logoutButton" class="button button-outline">Log out</button></div></div>
+      <div class="stats-grid"><div class="stat-card"><span>Total submissions</span><strong id="totalCount">0</strong><small>All received employee forms</small></div><div class="stat-card"><span>Document uploads</span><strong id="documentCount">0</strong><small>Files currently attached to records</small></div></div>
+      <div class="admin-tabs"><button class="tab active" data-tab="recordsPanel">Submissions</button><button class="tab" data-tab="requirementsPanel">Form requirements</button></div>
+      <section id="recordsPanel" class="admin-panel"><div class="panel-title"><div><h2>Submissions</h2><p class="muted">Employee details and attached documents</p></div><input id="searchRecords" class="search-input" placeholder="Search employees…" aria-label="Search employees"></div><div id="recordsContainer"></div></section>
+      <section id="requirementsPanel" class="admin-panel hidden"><div class="panel-title"><div><h2>Configure employee form</h2><p class="muted">Changes here control which fields employees see on the submission form.</p></div></div><div class="config-columns"><div class="config-card"><div class="config-title"><div><h3>Employee details</h3><p>Text, email, phone, date, number or long text.</p></div><button id="addField" class="button button-outline button-small">+ Add field</button></div><div id="fieldConfigList"></div></div><div class="config-card"><div class="config-title"><div><h3>Required documents</h3><p>Choose which document uploads are mandatory.</p></div><button id="addDocument" class="button button-outline button-small">+ Add document</button></div><div id="documentConfigList"></div></div></div><div class="save-row"><span id="requirementsMessage" class="muted"></span><button id="saveRequirements" class="button button-primary">Save requirements</button></div><div class="notice"><strong>Important:</strong> Changing a field's ID after employees have submitted forms can make older values harder to map in the export. Keep existing IDs unchanged when editing labels.</div></section>
+    </section>
+    <footer>Employee Portal <span>•</span> Internal company use</footer>
+  </main>
+  <script src="/app.js" defer></script>
+</body></html>

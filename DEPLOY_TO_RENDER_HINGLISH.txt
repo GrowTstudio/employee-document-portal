@@ -1,0 +1,41 @@
+EMPLOYEE DOCUMENT PORTAL — RENDER DEPLOY GUIDE
+===============================================
+
+Important: this project is prepared for Render deployment, with persistent storage for employee records and uploaded documents. The included Render configuration uses a paid Starter web service and a 1 GB persistent disk. A free Render web service has an ephemeral filesystem, so employee documents/data can disappear after a restart or redeploy. Do not collect real employee documents on a free ephemeral setup.
+
+PART A — Upload project to GitHub
+1. Sign in to https://github.com/ and create a new repository.
+2. Repository name: employee-document-portal
+3. Set it to Private (recommended because this is company-related software).
+4. Create the repository.
+5. On your computer, extract this ZIP. Open the inner employee_portal folder.
+6. In GitHub, choose Add file > Upload files.
+7. Upload the CONTENTS of the employee_portal folder (not the ZIP file itself). Make sure render.yaml, package.json, server.js, public folder, and this guide are at the repository root.
+8. Click Commit changes.
+
+PART B — Deploy to Render
+1. Sign in to https://render.com/.
+2. Open Dashboard and choose New + > Blueprint.
+3. Connect GitHub if asked, then select your employee-document-portal repository.
+4. Render reads render.yaml. Review the service and disk plan, then apply/create it.
+5. When prompted for ADMIN_PASSWORD, enter a strong, unique password (do not reuse your email or other account password).
+6. SESSION_SECRET is generated automatically by the Blueprint. If Render asks you to provide it, use a long random secret of at least 32 characters.
+7. Wait for deployment to finish. Open the generated *.onrender.com URL.
+
+PART C — Test before sharing
+1. Open the public URL in a private/incognito window.
+2. Submit a TEST employee record using dummy details and a dummy document only.
+3. Open Admin Login and sign in with the ADMIN_PASSWORD you set in Render.
+4. Check that the record appears, the document downloads, and Excel export works.
+5. Delete the dummy record. Only then share the employee form URL.
+
+Admin access: open the same site URL and click Admin Login. The password is set in Render Environment Variables; it is not written into the source files. To change it later, open Render service > Environment, update ADMIN_PASSWORD, save/redeploy, and log in with the new password.
+
+Storage: the persistent disk stores records in /var/data/data and uploads in /var/data/uploads. Do not remove the disk or change these paths unless you are migrating/backing up the data. Keep separate backups because a persistent disk is not a backup.
+
+Privacy/security notes:
+- Keep the GitHub repository private.
+- Use a unique strong admin password and never share it with employees.
+- Share only the employee submission URL; do not share the admin password.
+- This starter portal does not provide individual employee accounts or identity verification; anyone with the public form link can submit a form. If the company needs restricted submissions, add employee authentication/invite codes before launch.
+- Aadhaar and other identity documents are sensitive personal data. Collect only what your company truly needs, restrict admin access, and follow applicable privacy and company policies.
