@@ -77,11 +77,65 @@ function renderRecords() {
   const fields = state.requirements.fields;
   const docs = state.requirements.documents;
   const head = `<th>Employee</th>${fields.filter(f=>!['full_name','email','phone'].includes(f.id)).map(f=>`<th>${esc(f.label)}</th>`).join('')}<th>Documents</th><th>Submitted</th><th>Action</th>`;
-  const body = rows.map(r => `<tr><td><div class="employee-name">${esc(r.employee_name)}</div><div class="sub-text">${esc(r.email)}</div><div class="sub-text">${esc(r.phone)}</div></td>${fields.filter(f=>!['full_name','email','phone'].includes(f.id)).map(f=>`<td>${esc(r.details[f.id]||'—')}</td>`).join('')}<td><div class="doc-links">${docs.filter(d=>r.documents[d.id]).map(d=>`<button class="doc-link" data-sub="${r.id}" data-doc="${esc(d.id)}">↓ ${esc(d.label)}</button>`).join('')||'<span class="sub-text">No files</span>'}</div></td><td>${esc(new Date(r.submitted_at).toLocaleString())}</td><td><button class="delete-button" data-delete="${r.id}">Delete</button></td></tr>`).join('');
+  const body = rows.map(r => `<tr><td><div class="employee-name">${esc(r.employee_name)}</div><div class="sub-text">${esc(r.email)}</div><div class="sub-text">${esc(r.phone)}</div></td>${fields.filter(f=>!['full_name','email','phone'].includes(f.id)).map(f=>`<td>${esc(r.details[f.id]||'—')}</td>`).join('')}<td><div class="doc-links">${docs.filter(d=>r.documents[d.id]).map(d=>`<button class="doc-link" data-sub="${r.id}" data-doc="${esc(d.id)}">↓ ${esc(d.label)}</button>`).join('')||'<span class="sub-text">No files</span>'}</div></td><td>${esc(new Date(r.submitted_at).toLocaleString())}</td><td><button class="button button-outline button-small" data-edit="${r.id}">Edit</button> <button class="delete-button" data-delete="${r.id}">Delete</button></td></tr>`).join('');
   $('#recordsContainer').innerHTML = `<div class="records-table-wrap"><table class="records-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
   $('#recordsContainer').querySelectorAll('[data-sub]').forEach(btn => btn.addEventListener('click', () => downloadDoc(btn.dataset.sub,btn.dataset.doc)));
+  $('#recordsContainer').querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openEditEmployee(btn.dataset.edit)));
   $('#recordsContainer').querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', async () => { if(!confirm('Delete this submission and its uploaded files? This cannot be undone.')) return; try { await api(`/api/admin/submissions/${btn.dataset.delete}`,{method:'DELETE'}); await loadAdminData(); } catch(e){alert(e.message);} }));
 }
+
+function openEditEmployee(id) {
+  const row = state.rows.find(r => String(r.id) === String(id));
+  if (!row) return;
+  document.getElementById('employeeEditModal')?.remove();
+  const fields = state.requirements.fields;
+  const inputs = fields.map(f => {
+    const value = row.details?.[f.id] ?? '';
+    const common = `name="${esc(f.id)}" data-edit-field="${esc(f.id)}" ${f.required ? 'required' : ''}`;
+    if (f.type === 'textarea') {
+      return `<div class="field${f.type === 'textarea' ? ' full-width' : ''}"><label>${esc(f.label)}${f.required ? '<span class="star">*</span>' : ''}</label><textarea ${common}>${esc(value)}</textarea></div>`;
+    }
+    return `<div class="field"><label>${esc(f.label)}${f.required ? '<span class="star">*</span>' : ''}</label><input type="${esc(f.type)}" ${common} value="${esc(value)}" ${f.type === 'number' ? 'step="any"' : ''}></div>`;
+  }).join('');
+  const modal = document.createElement('div');
+  modal.id = 'employeeEditModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(10,20,35,.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto;';
+  modal.innerHTML = `<section style="background:#fff;border-radius:16px;padding:24px;width:min(760px,100%);max-height:92vh;overflow:auto;box-shadow:0 20px 60px #0004">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><div class="eyebrow">ADMINISTRATION</div><h2 style="margin:6px 0 14px">Edit employee details</h2></div><button type="button" id="closeEmployeeEdit" class="button button-outline">Close</button></div>
+    <p class="muted">Update the submitted information below. Existing uploaded documents will not be changed.</p>
+    <form id="employeeEditForm"><div class="form-grid">${inputs}</div><div id="employeeEditMessage" class="alert hidden"></div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px"><button type="button" id="cancelEmployeeEdit" class="button button-outline">Cancel</button><button type="submit" id="saveEmployeeEdit" class="button button-primary">Save changes</button></div></form></section>`;
+  document.body.appendChild(modal);
+  const close = () => modal.remove();
+  modal.querySelector('#closeEmployeeEdit').addEventListener('click', close);
+  modal.querySelector('#cancelEmployeeEdit').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  modal.querySelector('#employeeEditForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const button = modal.querySelector('#saveEmployeeEdit');
+    const message = modal.querySelector('#employeeEditMessage');
+    const details = {};
+    fields.forEach(f => { details[f.id] = modal.querySelector(`[data-edit-field="${CSS.escape(f.id)}"]`).value.trim(); });
+    button.disabled = true;
+    button.textContent = 'Saving…';
+    try {
+      const result = await api(`/api/admin/submissions/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({details})
+      });
+      close();
+      await loadAdminData();
+      alert(result.message || 'Employee details updated.');
+    } catch (err) {
+      alertBox(message, err.message || 'Could not update employee details.');
+      message.classList.remove('hidden');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Save changes';
+    }
+  });
+}
+
 async function downloadDoc(id, docId) {
   try { const res = await api(`/api/admin/documents/${id}/${encodeURIComponent(docId)}`); const blob=await res.blob(); const cd=res.headers.get('content-disposition')||''; const match=cd.match(/filename="?([^";]+)"?/i); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=match?match[1]:'employee-document'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); }
   catch(e){alert(e.message);}
