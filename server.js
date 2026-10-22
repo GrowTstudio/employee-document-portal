@@ -163,6 +163,35 @@ app.get('/api/admin/submissions', requireAdmin, (_req, res) => {
   }));
   res.json({ rows, requirements: getRequirements() });
 });
+
+app.put('/api/admin/submissions/:id', requireAdmin, (req, res) => {
+  const row = getSubmission(req.params.id);
+  if (!row) return res.status(404).json({ error: 'Submission not found.' });
+  const incoming = req.body && req.body.details;
+  if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
+    return res.status(400).json({ error: 'Employee details are required.' });
+  }
+  const requirements = getRequirements();
+  const details = {};
+  for (const field of requirements.fields) {
+    const value = incoming[field.id];
+    const cleaned = typeof value === 'string' ? value.trim().slice(0, 5000) : '';
+    if (field.required && !cleaned) {
+      return res.status(400).json({ error: `${field.label} is required.` });
+    }
+    details[field.id] = cleaned;
+  }
+  const nameField = requirements.fields.find(f => f.id === 'full_name') || requirements.fields[0];
+  const emailField = requirements.fields.find(f => f.type === 'email' || f.id === 'email');
+  const phoneField = requirements.fields.find(f => f.type === 'tel' || f.id === 'phone');
+  row.employee_name = String(details[nameField?.id] || 'Employee').slice(0, 200);
+  row.email = String(details[emailField?.id] || '').slice(0, 250);
+  row.phone = String(details[phoneField?.id] || '').slice(0, 50);
+  row.details_json = JSON.stringify(details);
+  saveStore();
+  res.json({ success: true, message: 'Employee details updated successfully.' });
+});
+
 app.get('/api/admin/documents/:id/:docId', requireAdmin, (req, res) => {
   const row = getSubmission(req.params.id);
   if (!row) return res.status(404).send('Submission not found.');
